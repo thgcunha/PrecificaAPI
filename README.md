@@ -70,6 +70,14 @@ Para rodar a API compilada após o build, use `npm run start --workspace "@preci
 
 O React será publicado no Netlify, a API NestJS no Render e o banco PostgreSQL no Neon. A URL de conexão do Neon será configurada como segredo no Render na fase de publicação. A versão local usa PostgreSQL em Docker Compose. A rotina de backup e restauração com `pg_dump` será entregue na fase de publicação.
 
-## Próxima fase
+## Domínio de precificação
 
-O domínio de precificação será escrito em TypeScript puro. Os cálculos preservam a precisão em Decimal, e o preço sugerido é arredondado para cima ao centavo apenas no final. Com custo direto de R$ 2,00 e percentuais somando 67%, o preço sugerido no iFood é R$ 6,07.
+A Fase 1 adiciona os cálculos puros em `apps/api/src/domain/` e os testes unitários em `apps/api/test/domain/`. O domínio usa decimal.js. Os custos preservam a precisão durante o cálculo e o preço sugerido é arredondado para cima ao centavo. Com custo direto de R$ 2,00 e percentuais somando 67%, o preço sugerido no iFood é R$ 6,07.
+
+Para verificar a cobertura específica do domínio:
+
+```powershell
+npm test --workspace "@precifica/api" -- --testPathPatterns=domain --coverage --collectCoverageFrom="src/domain/**/*.ts"
+```
+
+Consulte o [guia de migração para Python](docs/PORTING_TO_PYTHON.md) para os contratos de entrada e as regras de cálculo.
