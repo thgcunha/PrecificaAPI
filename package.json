@@ -1,0 +1,28 @@
+{
+  "name": "precifica-api",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev:api": "npm run dev --workspace @precifica/api",
+    "dev:web": "npm run dev --workspace @precifica/web",
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspace @precifica/api",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.0.0",
+    "prettier": "^3.7.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.56.0"
+  }
+}
