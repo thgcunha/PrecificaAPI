@@ -14,3 +14,5 @@ export class UnidadeIncompativelError extends ErroDeDominio {}
 export class RendimentoInvalidoError extends ErroDeDominio {}
 
 export class MargemContribuicaoInvalidaError extends ErroDeDominio {}
+
+export class RecursoNaoEncontradoError extends ErroDeDominio {}

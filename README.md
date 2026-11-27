@@ -66,6 +66,35 @@ npm test
 
 Para rodar a API compilada após o build, use `npm run start --workspace "@precifica/api"`. Para servir o build web localmente, use `npm run preview --workspace "@precifica/web"`.
 
+## Persistência com Prisma
+
+Com o PostgreSQL local rodando, aplique a migration e consulte seu estado. O Prisma lê o `.env` da raiz e usa `POSTGRES_PORT`, inclusive o valor `5433` quando configurado.
+
+```powershell
+npm run prisma:validate --workspace "@precifica/api"
+npm run db:migrate --workspace "@precifica/api"
+npm exec --workspace "@precifica/api" -- prisma migrate status
+```
+
+Para carregar os dados fictícios em um banco de demonstração, defina duas senhas distintas. O exemplo gera credenciais temporárias na sessão atual do PowerShell. Para reutilizá-las no login de demonstração, guarde-as no `.env` local antes de encerrar a sessão.
+
+```powershell
+$env:SEED_ADMIN_PASSWORD = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(18))
+$env:SEED_OPERADOR_PASSWORD = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(18))
+npm run prisma:generate --workspace "@precifica/api"
+npm run db:seed --workspace "@precifica/api"
+```
+
+O seed cria a Cozinha Demo de Salgados, a Confeitaria Demo e usuários dos perfis `ADMIN` e `OPERADOR`, com endereços como `admin@salgados-demo.test` e `operador@salgados-demo.test`. As senhas são armazenadas em hash bcrypt. O seed pode ser executado várias vezes e preserva os registros existentes, inclusive as senhas já cadastradas.
+
+Para rodar a suíte de persistência, defina `DATABASE_TEST_URL` na sessão com a URL de um PostgreSQL descartável que já tenha recebido a migration e o seed. A suíte efetua gravações de teste e valida as chaves, a concorrência e o relatório.
+
+```powershell
+npm test --workspace "@precifica/api" -- --runTestsByPath test/persistencia.spec.ts
+```
+
+Sem `DATABASE_TEST_URL`, a suíte padrão roda os testes do domínio e da API. Veja os diagramas em [Arquitetura e persistência](docs/architecture.md).
+
 ## Publicação prevista
 
 O React será publicado no Netlify, a API NestJS no Render e o banco PostgreSQL no Neon. A URL de conexão do Neon será configurada como segredo no Render na fase de publicação. A versão local usa PostgreSQL em Docker Compose. A rotina de backup e restauração com `pg_dump` será entregue na fase de publicação.

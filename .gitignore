@@ -10,3 +10,4 @@ coverage/
 *.sql.gz
 .netlify/
 /Proposta de Projeto de Extensão - POO III.pdf
+/apps/api/src/generated/

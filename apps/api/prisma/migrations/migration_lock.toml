@@ -1,0 +1,2 @@
+# Mantém o provedor sincronizado com o schema Prisma.
+provider = "postgresql"

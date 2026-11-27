@@ -1,0 +1,148 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "cjs"
+  importFileExtension = ""
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PerfilUsuario {
+  ADMIN
+  OPERADOR
+}
+
+enum UnidadeMedida {
+  g
+  kg
+  ml
+  l
+  un
+}
+
+enum TipoCanalVenda {
+  BALCAO
+  MAQUININHA
+  IFOOD
+  WHATSAPP
+}
+
+model Estabelecimento {
+  id           String             @id @default(uuid()) @db.Uuid
+  nome         String             @db.VarChar(120)
+  slug         String             @unique @db.VarChar(120)
+  configuracao ConfiguracaoCusto?
+  usuarios     Usuario[]
+  ingredientes Ingrediente[]
+  receitas     Receita[]
+  canais       CanalVenda[]
+}
+
+model Usuario {
+  id                String          @id @default(uuid()) @db.Uuid
+  estabelecimentoId String          @db.Uuid
+  nome              String          @db.VarChar(120)
+  email             String          @unique @db.VarChar(254)
+  senhaHash         String          @db.VarChar(255)
+  perfil            PerfilUsuario   @default(OPERADOR)
+  estabelecimento   Estabelecimento @relation(fields: [estabelecimentoId], references: [id], onDelete: Cascade)
+
+  @@index([estabelecimentoId])
+}
+
+model ConfiguracaoCusto {
+  estabelecimentoId    String          @id @db.Uuid
+  despesasFixasMensais Decimal         @db.Decimal(18, 6)
+  faturamentoMensal    Decimal         @db.Decimal(18, 6)
+  percentualImpostos   Decimal         @default(0) @db.Decimal(8, 6)
+  percentualMargemAlvo Decimal         @default(0) @db.Decimal(8, 6)
+  estabelecimento      Estabelecimento @relation(fields: [estabelecimentoId], references: [id], onDelete: Cascade)
+}
+
+model Ingrediente {
+  id                  String                      @id @default(uuid()) @db.Uuid
+  estabelecimentoId   String                      @db.Uuid
+  nome                String                      @db.VarChar(120)
+  precoEmbalagem      Decimal                     @db.Decimal(18, 6)
+  quantidadeEmbalagem Decimal                     @db.Decimal(18, 6)
+  unidadeEmbalagem    UnidadeMedida
+  estabelecimento     Estabelecimento             @relation(fields: [estabelecimentoId], references: [id], onDelete: Cascade)
+  historico           HistoricoPrecoIngrediente[]
+  itens               ItemReceita[]
+
+  @@unique([estabelecimentoId, id])
+  @@unique([estabelecimentoId, nome])
+}
+
+model HistoricoPrecoIngrediente {
+  id            String      @id @default(uuid()) @db.Uuid
+  ingredienteId String      @db.Uuid
+  precoAnterior Decimal     @db.Decimal(18, 6)
+  precoNovo     Decimal     @db.Decimal(18, 6)
+  registradoEm  DateTime    @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  ingrediente   Ingrediente @relation(fields: [ingredienteId], references: [id], onDelete: Cascade)
+
+  @@index([ingredienteId, registradoEm])
+}
+
+model Receita {
+  id                String           @id @default(uuid()) @db.Uuid
+  estabelecimentoId String           @db.Uuid
+  nome              String           @db.VarChar(120)
+  descricao         String?          @db.VarChar(500)
+  rendimentoTeorico Decimal          @db.Decimal(18, 6)
+  percentualPerda   Decimal          @default(0) @db.Decimal(8, 6)
+  custoEmbalagem    Decimal          @default(0) @db.Decimal(18, 6)
+  custoGasEnergia   Decimal          @default(0) @db.Decimal(18, 6)
+  custoMaoDeObra    Decimal          @default(0) @db.Decimal(18, 6)
+  publicada         Boolean          @default(false)
+  estabelecimento   Estabelecimento  @relation(fields: [estabelecimentoId], references: [id], onDelete: Cascade)
+  itens             ItemReceita[]
+  precosPraticados  PrecoPraticado[]
+
+  @@unique([estabelecimentoId, id])
+  @@unique([estabelecimentoId, nome])
+}
+
+model ItemReceita {
+  estabelecimentoId String        @db.Uuid
+  receitaId         String        @db.Uuid
+  ingredienteId     String        @db.Uuid
+  quantidadeUsada   Decimal       @db.Decimal(18, 6)
+  unidadeUsada      UnidadeMedida
+  fatorCorrecao     Decimal       @default(1) @db.Decimal(18, 6)
+  receita           Receita       @relation(fields: [estabelecimentoId, receitaId], references: [estabelecimentoId, id], onDelete: Cascade)
+  ingrediente       Ingrediente   @relation(fields: [estabelecimentoId, ingredienteId], references: [estabelecimentoId, id], onDelete: NoAction)
+
+  @@id([receitaId, ingredienteId])
+  @@index([estabelecimentoId, ingredienteId])
+}
+
+model CanalVenda {
+  id                   String           @id @default(uuid()) @db.Uuid
+  estabelecimentoId    String           @db.Uuid
+  tipo                 TipoCanalVenda
+  nome                 String           @db.VarChar(120)
+  percentualMaquininha Decimal          @default(0) @db.Decimal(8, 6)
+  percentualCanal      Decimal          @default(0) @db.Decimal(8, 6)
+  estabelecimento      Estabelecimento  @relation(fields: [estabelecimentoId], references: [id], onDelete: Cascade)
+  precosPraticados     PrecoPraticado[]
+
+  @@unique([estabelecimentoId, id])
+  @@unique([estabelecimentoId, tipo])
+}
+
+model PrecoPraticado {
+  estabelecimentoId String     @db.Uuid
+  receitaId         String     @db.Uuid
+  canalVendaId      String     @db.Uuid
+  valor             Decimal    @db.Decimal(18, 2)
+  atualizadoEm      DateTime   @default(now()) @updatedAt @db.Timestamptz(3)
+  receita           Receita    @relation(fields: [estabelecimentoId, receitaId], references: [estabelecimentoId, id], onDelete: Cascade)
+  canalVenda        CanalVenda @relation(fields: [estabelecimentoId, canalVendaId], references: [estabelecimentoId, id], onDelete: Cascade)
+
+  @@id([receitaId, canalVendaId])
+  @@index([estabelecimentoId, canalVendaId])
+}

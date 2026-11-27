@@ -4,16 +4,27 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
+    "predev": "npm run prisma:generate",
     "dev": "nest start --watch",
-    "build": "nest build",
+    "prebuild": "npm run prisma:generate",
+    "build": "tsc --noEmit && nest build",
     "start": "node dist/main.js",
-    "test": "jest --runInBand"
+    "pretest": "npm run prisma:generate",
+    "test": "jest --runInBand",
+    "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.0",
     "@nestjs/core": "^11.1.0",
     "@nestjs/platform-express": "^11.1.0",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "bcryptjs": "3.0.3",
     "decimal.js": "^10.6.0",
+    "dotenv": "17.4.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
@@ -22,7 +33,9 @@
     "@nestjs/testing": "^11.1.0",
     "@types/jest": "^30.0.0",
     "jest": "^30.2.0",
-    "ts-jest": "^29.4.5"
+    "prisma": "7.10.1",
+    "ts-jest": "^29.4.5",
+    "tsx": "4.23.15"
   },
   "jest": {
     "testEnvironment": "node",
